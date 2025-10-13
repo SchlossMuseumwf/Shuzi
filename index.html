@@ -12,57 +12,36 @@
             line-height: 1.5;
         }
         .container { max-width: 600px; margin: auto; }
-        .instruction {
-            margin-bottom: 30px;
-            font-size: 18px;
-            font-weight: bold;
-        }
+        .instruction { margin-bottom: 30px; font-size: 18px; font-weight: bold; }
         .hidden { display: none; }
         .display {
-            font-size: 24px;
-            border: 2px solid #007BFF;
-            padding: 10px;
-            width: 100%;
-            max-width: 300px;
-            margin: 0 auto 20px auto;
-            text-align: center;
-            border-radius: 5px;
+            font-size: 24px; border: 2px solid #007BFF; padding: 10px;
+            width: 100%; max-width: 300px; margin: 0 auto 20px auto;
+            text-align: center; border-radius: 5px;
         }
         .button-container {
-            display: flex; flex-wrap: wrap;
-            justify-content: center; gap: 10px;
-            margin-bottom: 20px;
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 20px;
         }
         .button {
-            font-size: 20px; width: 60px; height: 60px;
-            border: none; border-radius: 5px;
+            font-size: 20px; width: 60px; height: 60px; border: none; border-radius: 5px;
             background-color: #007BFF; color: white; cursor: pointer;
         }
         .button:hover { background-color: #0056b3; }
         .back-button { background-color: #FF0000; }
         .back-button:hover { background-color: #CC0000; }
         .play-button {
-            font-size: 20px; width: 60px; height: 60px;
-            border: none; border-radius: 5px;
+            font-size: 20px; width: 60px; height: 60px; border: none; border-radius: 5px;
             background-color: #28a745; color: white; cursor: pointer;
         }
         .play-button:hover { background-color: #218838; }
-        .link-container {
-            display: flex; justify-content: center; align-items: center;
-            gap: 15px; margin-top: 20px;
-        }
+        .link-container { display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 20px; }
         .back-link {
-            font-size: 16px; padding: 8px 16px;
-            border: none; border-radius: 5px;
-            background-color: #ffc107; color: black;
-            text-decoration: none; cursor: pointer; height: 40px;
+            font-size: 16px; padding: 8px 16px; border: none; border-radius: 5px;
+            background-color: #ffc107; color: black; text-decoration: none; cursor: pointer; height: 40px;
             display: flex; align-items: center; justify-content: center;
         }
         .back-link:hover { background-color: #e0a800; }
-        #audio-title {
-            font-size: 20px; font-weight: bold;
-            margin: 20px 0; color: #333;
-        }
+        #audio-title { font-size: 20px; font-weight: bold; margin: 20px 0; color: #333; }
     </style>
 </head>
 <body>
@@ -101,26 +80,20 @@
 
     <script>
         let currentNumber = '';
-        const titlesUrl = "https://schlossmuseumwf.github.io/audio/titles.json";
+
+        // ⬇️ всегда zh + анти-кэш для titles.json
+        const chosenLanguage = "zh";
+        const titlesUrl = "https://schlossmuseumwf.github.io/audio/titles.json?v=" + Date.now();
+
         let titles = {};
+        let titlesReady = false;
 
-        // По умолчанию берём zh, но попробуем подстроиться, если ключ в JSON другой
-        const languageCandidates = ["zh", "cn", "ch"];
-        let chosenLanguage = "zh";
-
-        // Загрузка titles.json
         fetch(titlesUrl)
             .then(response => response.json())
             .then(data => {
                 titles = data || {};
-                // Автовыбор первого доступного ключа из кандидатов
-                if (!titles[chosenLanguage]) {
-                    for (const cand of languageCandidates) {
-                        if (titles[cand]) { chosenLanguage = cand; break; }
-                    }
-                }
-                // Если нет ни одного — оставим zh, просто будем показывать номер
-                console.log("使用的语言键 (titles):", chosenLanguage);
+                titlesReady = !!(titles[chosenLanguage]);
+                console.log("titles.zh loaded:", titlesReady);
             })
             .catch(error => {
                 console.error("加载 titles.json 时出错:", error);
@@ -162,11 +135,12 @@
             const audioPlayer = document.getElementById('audio-player');
             const audioTitle = document.getElementById('audio-title');
 
+            // Ключи в JSON — строки, но доступ по числу тоже сработает (JS приведёт к строке)
             const numericNumber = parseInt(currentNumber, 10);
 
             let title = null;
-            if (titles && titles[chosenLanguage]) {
-                title = titles[chosenLanguage][numericNumber];
+            if (titlesReady) {
+                title = titles[chosenLanguage][numericNumber] ?? titles[chosenLanguage][currentNumber] ?? null;
             }
 
             if (title) {
